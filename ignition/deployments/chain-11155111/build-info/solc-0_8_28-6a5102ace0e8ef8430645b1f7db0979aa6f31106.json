@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-6a5102ace0e8ef8430645b1f7db0979aa6f31106",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/Todo.sol": "project/contracts/Todo.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/Todo.sol": {
+        "content": "// SPDX-License-Identifier: SEE LICENSE IN LICENSE\r\npragma solidity ^0.8.28;\r\n\r\ncontract Todo {\r\n    struct TodoList {\r\n        uint256 id;\r\n        bool isDone;\r\n        string description;\r\n        uint256 createdAt;\r\n    }\r\n\r\n    event TodoAdded(uint256 indexed id, string description);\r\n    event TodoDeleted(uint256 indexed id, string description);\r\n    event TodoUpdated(uint256 indexed id, string description, bool isDone);\r\n    event TodoDescriptionUpdated(\r\n        uint256 indexed id,\r\n        string oldDescription,\r\n        string newDescription\r\n    );\r\n\r\n    mapping(uint256 => TodoList) private todos;\r\n    uint256 public _nextId;\r\n    // Track the number of active todos to size the array correctly\r\n    uint256 public activeTodoCount;\r\n\r\n    modifier todoExist(uint256 id) {\r\n        require(todos[id].createdAt != 0, \"Todo NOT FOUND\");\r\n        _;\r\n    }\r\n\r\n    function addItems(string calldata _description) external {\r\n        require(bytes(_description).length > 0, \"INVALID DESCRIPTION\");\r\n        uint256 id = ++_nextId;\r\n\r\n        todos[id] = TodoList({\r\n            id: id,\r\n            isDone: false,\r\n            description: _description,\r\n            createdAt: block.timestamp\r\n        });\r\n\r\n        activeTodoCount++; // Increment active todo count\r\n\r\n        emit TodoAdded(id, _description);\r\n    }\r\n\r\n    function deleteItems(uint256 _id) external todoExist(_id) {\r\n        string memory todoDescription = todos[_id].description;\r\n        delete todos[_id];\r\n        activeTodoCount--; // Decrement active todo count instead of _nextId\r\n\r\n        emit TodoDeleted(_id, todoDescription);\r\n    }\r\n\r\n    function toggleCompleted(uint256 _id) external todoExist(_id) {\r\n        todos[_id].isDone = !todos[_id].isDone;\r\n\r\n        emit TodoUpdated(_id, todos[_id].description, todos[_id].isDone);\r\n    }\r\n\r\n    function updateDescription(uint256 _id, string calldata _description)\r\n        external\r\n        todoExist(_id)\r\n    {\r\n        require(bytes(_description).length > 0, \"INVALID DESCRIPTION\");\r\n        string memory oldDescription = todos[_id].description;\r\n        todos[_id].description = _description;\r\n\r\n        emit TodoDescriptionUpdated(_id, oldDescription, _description);\r\n    }\r\n\r\n    function getAllTodos() external view returns (TodoList[] memory) {\r\n        TodoList[] memory todoArray = new TodoList[](activeTodoCount);\r\n        uint256 index = 0;\r\n\r\n        for (uint256 i = 1; i <= _nextId; i++) {\r\n            if (todos[i].createdAt != 0) {\r\n                todoArray[index] = todos[i];\r\n                index++;\r\n            }\r\n        }\r\n        return todoArray;\r\n    }\r\n}"
+      }
+    }
+  }
+}
